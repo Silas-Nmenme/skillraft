@@ -4,7 +4,7 @@ const morgan = require("morgan");
 const path = require("path");
 
 //importing necessary modules
-const connectDB = require("./src/config/db.js");
+const connectDB = require("./config/db.js");
 
 dotenv.config();
 
@@ -17,11 +17,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
 //Routes
-const userRoutes = require("./src/routes/user.routes");
-const authRoutes = require("./src/routes/auth.routes");
-const founderRoutes = require("./src/routes/founder.routes");
-const recruiterRoutes = require("./src/routes/recruiter.routes");
-const soloEntrepreneurRoutes = require("./src/routes/soloEntrepreneur.routes");
+const userRoutes = require("./routes/user.routes");
+const authRoutes = require("./routes/auth.routes");
+const founderRoutes = require("./routes/founder.routes");
+const recruiterRoutes = require("./routes/recruiter.routes");
+const soloEntrepreneurRoutes = require("./routes/soloEntrepreneur.routes");
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/founders", founderRoutes);

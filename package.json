@@ -2,21 +2,21 @@
   "name": "softpire-backend-project",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon index.js",
-    "start": "node index.js"
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vector-360/sk-backend"
+    "url": "https://github.com/Silas-Nmenme/skillraft.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/vector-360/sk-backend/issues"
+    "url": "https://github.com/Silas-Nmenme/skillraft/issues"
   },
-  "homepage": "https://github.com/vector-360/sk-backend#readme",
+  "homepage": "https://github.com/Silas-Nmenme/skillraft.git#readme",
   "dependencies": {
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
