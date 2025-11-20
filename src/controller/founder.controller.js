@@ -135,11 +135,19 @@ const updateProfilePage2 = async (req, res) => {
     }
 
     // Validate skillsAndTech if provided
-    if (skillsAndTech && !Array.isArray(skillsAndTech)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Skills and tech must be an array of strings.'
-      });
+    if (skillsAndTech) {
+      if (!Array.isArray(skillsAndTech)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Skills and tech must be an array of strings.'
+        });
+      }
+      if (!skillsAndTech.every(item => typeof item === 'string')) {
+        return res.status(400).json({
+          success: false,
+          message: 'Skills and tech must be an array of strings.'
+        });
+      }
     }
 
     // Update the founder's profile page 2 info
