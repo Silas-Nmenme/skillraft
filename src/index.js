@@ -46,8 +46,5 @@ connectDB().then(() => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Allowed frontend origin: ${FRONTEND_URL}`);
   });
-}).catch(err => {
-  console.error("MongoDB connection failed:", err.message);
-  process.exit(1);
 });
 
