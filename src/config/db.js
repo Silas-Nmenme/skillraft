@@ -3,6 +3,11 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+if (!process.env.MONGO_URI) {
+    console.error('Error: MONGO_URI is not defined in environment variables. Please set it in your .env file.');
+    process.exit(1);
+}
+
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
