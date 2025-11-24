@@ -1,20 +1,25 @@
 const nodemailer = require('nodemailer');
 
-// Create transporter
+// Create transporter using environment variables
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.EMAIL_HOST || 'smtp.sendgrid.net',
+  port: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT) : 587,
+  secure: process.env.EMAIL_SECURE === 'true',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+    user: process.env.EMAIL_USER || 'apikey',
+    pass: process.env.EMAIL_PASS || process.env.SENDGRID_API_KEY
+  },
+  authMethod: 'LOGIN',
+  debug: true,
+  logger: true
 });
 
-// Verify transporter configuration (only if credentials are provided)
-if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+// Verify transporter configuration (only if auth credentials provided)
+if ((process.env.EMAIL_USER || process.env.SENDGRID_API_KEY) && process.env.EMAIL_PASS !== '') {
   transporter.verify((error, success) => {
     if (error) {
       console.error('Email transporter verification failed:', error.message);
-      console.log('For Gmail, ensure you are using an App Password if 2FA is enabled. Enable "Less secure app access" or generate an App Password from your Google Account settings.');
+      console.log('Please check your email SMTP credentials and settings.');
     } else {
       console.log('Email transporter is ready to send messages');
     }
