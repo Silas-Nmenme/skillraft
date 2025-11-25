@@ -1,7 +1,9 @@
 const { sendEmail } = require('../config/email');
 const emailTemplates = require('../../templates/emailTemplates');
 
-// Send password reset email
+// ================================
+// Send Password Reset Email
+// ================================
 const sendPasswordResetEmail = async (email, resetToken) => {
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
   const html = emailTemplates.passwordResetEmail(resetUrl);
@@ -14,7 +16,9 @@ const sendPasswordResetEmail = async (email, resetToken) => {
   );
 };
 
-// Send password reset success email
+// ================================
+// Send Password Reset Success Email
+// ================================
 const sendPasswordResetSuccessEmail = async (email) => {
   const html = emailTemplates.passwordResetSuccessEmail();
 
@@ -26,7 +30,9 @@ const sendPasswordResetSuccessEmail = async (email) => {
   );
 };
 
-// Send email verification email
+// ================================
+// Send Email Verification Email
+// ================================
 const sendVerificationEmail = async (email, verificationToken) => {
   const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
   const html = emailTemplates.emailVerificationEmail(verificationUrl);
@@ -39,7 +45,9 @@ const sendVerificationEmail = async (email, verificationToken) => {
   );
 };
 
-// Send login alert email
+// ================================
+// Send Login Alert Email
+// ================================
 const sendLoginAlertEmail = async (email, loginDetails) => {
   const html = emailTemplates.loginAlertEmail(loginDetails);
 
@@ -51,7 +59,9 @@ const sendLoginAlertEmail = async (email, loginDetails) => {
   );
 };
 
-// Send email verification success email
+// ================================
+// Send Email Verification Success Email
+// ================================
 const sendVerificationSuccessEmail = async (email) => {
   const html = emailTemplates.emailVerificationSuccessEmail();
 
