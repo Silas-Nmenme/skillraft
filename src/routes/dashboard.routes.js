@@ -5,7 +5,7 @@ const { isAuthenticated } = require('../middlewares/isAuthenticated');
 const { upload } = require('../config/cloudinary');
 
 // Route to get dashboard data
-router.get('/dashboard', isAuthenticated, getDashboard);
+router.get('/dashboard', getDashboard);
 
 // Route to upload file
 router.post('/dashboard/upload', isAuthenticated, upload.single('file'), uploadFile);
