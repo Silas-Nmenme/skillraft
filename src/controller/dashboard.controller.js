@@ -120,6 +120,8 @@ const getDashboard = async (req, res) => {
 
 const uploadFile = async (req, res) => {
   try {
+    console.log('uploadFile - req.file:', req.file); // debug log
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -127,9 +129,26 @@ const uploadFile = async (req, res) => {
       });
     }
 
-    // File uploaded successfully to Cloudinary
-    const fileUrl = req.file.path; // Cloudinary URL
-    const publicId = req.file.filename; // Public ID for future reference
+    const file = req.file;
+
+    // support different upload middleware shapes
+    const fileUrl =
+      file.path ||
+      file.secure_url ||
+      (file.location ? file.location : undefined) ||
+      file.url ||
+      (file.publicUrl && file.publicUrl()) ||
+      null;
+
+    const publicId = file.filename || file.public_id || file.publicId || file.key || file.originalname || null;
+
+    if (!fileUrl) {
+      console.error('Upload middleware did not return a URL for uploaded file', file);
+      return res.status(500).json({
+        success: false,
+        message: 'Upload succeeded but no URL returned by upload middleware.'
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -143,7 +162,8 @@ const uploadFile = async (req, res) => {
     console.error('Error uploading file:', error.message, error.stack);
     res.status(500).json({
       success: false,
-      message: 'Internal server error.'
+      message: 'Internal server error.',
+      error: error.message
     });
   }
 };
