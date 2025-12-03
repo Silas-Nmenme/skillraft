@@ -32,6 +32,8 @@ const authRoutes = require("./routes/auth.routes");
 const founderRoutes = require("./routes/founder.routes");
 const recruiterRoutes = require("./routes/recruiter.routes");
 const soloEntrepreneurRoutes = require("./routes/soloEntrepreneur.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
+app.use("/api", dashboardRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/founders", founderRoutes);
