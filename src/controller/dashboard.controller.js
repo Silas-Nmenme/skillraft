@@ -27,6 +27,15 @@ const getUserCounts = async () => {
 
 const getDashboard = async (req, res) => {
   try {
+    // Validate req.user exists
+    if (!req.user || !req.user._id) {
+      console.error('User not authenticated or missing _id');
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated.'
+      });
+    }
+
     const user = await findUserById(req.user._id);
     if (!user) {
       return res.status(404).json({
@@ -100,10 +109,11 @@ const getDashboard = async (req, res) => {
       data: dashboardData
     });
   } catch (error) {
-    console.error('Error fetching dashboard:', error);
+    console.error('Error fetching dashboard:', error.message, error.stack);
     res.status(500).json({
       success: false,
-      message: 'Internal server error.'
+      message: 'Internal server error.',
+      error: error.message // Remove this in production
     });
   }
 };
@@ -130,7 +140,7 @@ const uploadFile = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error uploading file:', error);
+    console.error('Error uploading file:', error.message, error.stack);
     res.status(500).json({
       success: false,
       message: 'Internal server error.'
