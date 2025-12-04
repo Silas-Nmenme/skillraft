@@ -1,7 +1,6 @@
 const Founder = require('../models/founder.schema');
 const Recruiter = require('../models/recruiter.schema');
 const SoloEntrepreneur = require('../models/soloEntrepreneur.schema');
-const { upload } = require('../config/cloudinary');
 
 // Helper: find user by ID across all collections
 const findUserById = async (userId) => {
@@ -12,7 +11,7 @@ const findUserById = async (userId) => {
   );
 };
 
-// Helper: get counts across collections (similar to auth.controller.js)
+// Helper: get counts across collections
 const getUserCounts = async () => {
   const founderCount = await Founder.countDocuments();
   const recruiterCount = await Recruiter.countDocuments();
@@ -27,7 +26,6 @@ const getUserCounts = async () => {
 
 const getDashboard = async (req, res) => {
   try {
-    // Validate req.user exists
     if (!req.user || !req.user._id) {
       console.error('User not authenticated or missing _id');
       return res.status(401).json({
@@ -50,9 +48,8 @@ const getDashboard = async (req, res) => {
       welcome: `Welcome back, ${user.firstName}!`,
       overview: `Here is your overview for this year.`,
       userCounts,
-      // Placeholder data since no Course model exists yet
       courses: {
-        uploaded: 10, // Static for now
+        uploaded: 10,
         averageRating: 4.6,
         courseGrowth: '+2',
         workshopGrowth: '+5',
@@ -91,17 +88,15 @@ const getDashboard = async (req, res) => {
       }
     };
 
-    // Role-specific data
     if (user.role === 'Founder' || user.role === 'Solo Entrepreneur') {
       dashboardData.mentees = 1200;
       dashboardData.reviews = '+10';
       dashboardData.uiDesign = 2000;
       dashboardData.uxDesign = '+10';
     } else if (user.role === 'Recruiter') {
-      // For recruiters, perhaps hiring-related placeholders
       dashboardData.hiringNeeds = 12;
       dashboardData.positionsFilled = '+5';
-      dashboardData.candidatesReviewed = 4.6; // Placeholder
+      dashboardData.candidatesReviewed = 4.6;
     }
 
     res.status(200).json({
@@ -113,53 +108,57 @@ const getDashboard = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Internal server error.',
-      error: error.message // Remove this in production
+      error: error.message
     });
   }
 };
 
 const uploadFile = async (req, res) => {
   try {
-    console.log('uploadFile - req.file:', req.file, 'req.files:', req.files, 'req.body:', req.body);
+    console.log('uploadFile called');
+    console.log('req.file:', req.file);
+    console.log('req.files:', req.files);
+    console.log('req.user:', req.user);
 
-    // Multer/file-validation surface error (some setups set this)
     if (req.fileValidationError) {
-      return res.status(400).json({ success: false, message: req.fileValidationError });
+      console.error('File validation error:', req.fileValidationError);
+      return res.status(400).json({
+        success: false,
+        message: req.fileValidationError
+      });
     }
 
-    // Support single, array, and fields-based uploads
     const file =
       req.file ||
       (Array.isArray(req.files) && req.files[0]) ||
       (req.files && Object.values(req.files).flat()[0]);
 
     if (!file) {
+      console.error('No file found in request');
       return res.status(400).json({
         success: false,
         message: 'No file uploaded.'
       });
     }
 
-    // Robust URL extraction for different storage responses
+    console.log('File object:', file);
+
+    const extractPublicIdFromUrl = (url) => {
+      if (!url) return null;
+      const m = url.match(/\/([^\/]+)\.(?:jpg|jpeg|png|gif|mp4|pdf|docx|zip|webp)(?:[?#].*)?$/i);
+      if (m) return m[1];
+      const m2 = url.match(/\/v\d+\/([^\.\/]+)(?:\.[a-z0-9]+)?$/i);
+      return m2 ? m2[1] : null;
+    };
+
     const fileUrl =
       file.path ||
       file.secure_url ||
       file.url ||
       file.location ||
-      file.public_url ||
-      file.originalUrl ||
+      file.publicUrl ||
       (Array.isArray(file) && (file[0]?.path || file[0]?.secure_url)) ||
       null;
-
-    // Fallback public id extraction from known fields or from URL
-    const extractPublicIdFromUrl = (url) => {
-      if (!url) return null;
-      const m = url.match(/\/([^\/]+)\.(?:jpg|jpeg|png|gif|mp4|pdf|docx|zip|webp)(?:[?#].*)?$/i);
-      if (m) return m[1];
-      // cloudinary v#/.../<public_id> pattern
-      const m2 = url.match(/\/v\d+\/([^\.\/]+)(?:\.[a-z0-9]+)?$/i);
-      return m2 ? m2[1] : null;
-    };
 
     const publicId =
       file.filename ||
@@ -171,27 +170,34 @@ const uploadFile = async (req, res) => {
       null;
 
     if (!fileUrl) {
-      console.error('Upload middleware did not return a URL for uploaded file', file);
+      console.error('No URL extracted from file object:', file);
       return res.status(500).json({
         success: false,
         message: 'Upload succeeded but no URL returned by storage provider.'
       });
     }
 
+    console.log('Upload successful - URL:', fileUrl, 'PublicId:', publicId);
+
     return res.status(200).json({
       success: true,
       message: 'File uploaded successfully.',
       data: {
         url: fileUrl,
-        publicId: publicId
+        publicId: publicId,
+        fileName: file.originalname || publicId
       }
     });
   } catch (error) {
-    console.error('Error uploading file:', error);
-    // Handle common multer limit error
-    if (error && error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(413).json({ success: false, message: 'File too large.' });
+    console.error('Error uploading file:', error.message, error.stack);
+
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({
+        success: false,
+        message: 'File too large. Maximum 25MB allowed.'
+      });
     }
+
     return res.status(500).json({
       success: false,
       message: 'Internal server error.',

@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { getDashboard, uploadFile } = require('../controller/dashboard.controller');
 const { isAuthenticated } = require('../middlewares/isAuthenticated');
-const { upload } = require('../config/cloudinary');
+const { uploadAny, upload } = require('../config/cloudinary');
 
-// Route to get dashboard data
+// GET dashboard data
 router.get('/dashboard', isAuthenticated, getDashboard);
 
-// Route to upload file
-router.post('/dashboard/upload', isAuthenticated, upload.single('file'), uploadFile);
+// POST file upload - uses uploadAny if available, falls back to upload
+const fileUploadMiddleware = uploadAny ? uploadAny.single('file') : upload.single('file');
+router.post('/dashboard/upload', isAuthenticated, fileUploadMiddleware, uploadFile);
 
 module.exports = router;
