@@ -15,33 +15,29 @@ const storage = new CloudinaryStorage({
     params: {
     folder: 'softpire_uploads',
     allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'docx'],
-    transformation: [
-        {
-            width: 500,
-        height: 500,
-        crop: 'fill',
-        gravity: 'face', // Focus on face if detected
-        quality: 'auto:good',
-        format: 'jpg'
-        }
-    ],
     public_id: (req, file) => {
         //Generate unique filename with user ID and timestamp
         const userId = req.user?._id || 'anonymous';
         const timestamp = Date.now();
-        return `profile_${userId}_${timestamp}`;
+        return `file_${userId}_${timestamp}`;
     }
     },
 });
 
 //File filter function to validate file types
 const fileFilter = (req, file, cb) => {
-    //check if file type is an image
-      if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed!'), false);
-  }
+    const allowedMimetypes = [
+        'image/jpeg',
+        'image/png',
+        'image/jpg',
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    if (allowedMimetypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only image, PDF, and DOCX files are allowed!'), false);
+    }
 };
 
 //configure multer with Cloudinary storage
