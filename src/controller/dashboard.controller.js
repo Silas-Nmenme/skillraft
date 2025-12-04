@@ -120,37 +120,65 @@ const getDashboard = async (req, res) => {
 
 const uploadFile = async (req, res) => {
   try {
-    console.log('uploadFile - req.file:', req.file); // debug log
+    console.log('uploadFile - req.file:', req.file, 'req.files:', req.files, 'req.body:', req.body);
 
-    if (!req.file) {
+    // Multer/file-validation surface error (some setups set this)
+    if (req.fileValidationError) {
+      return res.status(400).json({ success: false, message: req.fileValidationError });
+    }
+
+    // Support single, array, and fields-based uploads
+    const file =
+      req.file ||
+      (Array.isArray(req.files) && req.files[0]) ||
+      (req.files && Object.values(req.files).flat()[0]);
+
+    if (!file) {
       return res.status(400).json({
         success: false,
         message: 'No file uploaded.'
       });
     }
 
-    const file = req.file;
-
-    // support different upload middleware shapes
+    // Robust URL extraction for different storage responses
     const fileUrl =
       file.path ||
       file.secure_url ||
-      (file.location ? file.location : undefined) ||
       file.url ||
-      (file.publicUrl && file.publicUrl()) ||
+      file.location ||
+      file.public_url ||
+      file.originalUrl ||
+      (Array.isArray(file) && (file[0]?.path || file[0]?.secure_url)) ||
       null;
 
-    const publicId = file.filename || file.public_id || file.publicId || file.key || file.originalname || null;
+    // Fallback public id extraction from known fields or from URL
+    const extractPublicIdFromUrl = (url) => {
+      if (!url) return null;
+      const m = url.match(/\/([^\/]+)\.(?:jpg|jpeg|png|gif|mp4|pdf|docx|zip|webp)(?:[?#].*)?$/i);
+      if (m) return m[1];
+      // cloudinary v#/.../<public_id> pattern
+      const m2 = url.match(/\/v\d+\/([^\.\/]+)(?:\.[a-z0-9]+)?$/i);
+      return m2 ? m2[1] : null;
+    };
+
+    const publicId =
+      file.filename ||
+      file.public_id ||
+      file.publicId ||
+      file.key ||
+      file.originalname ||
+      extractPublicIdFromUrl(fileUrl) ||
+      null;
 
     if (!fileUrl) {
       console.error('Upload middleware did not return a URL for uploaded file', file);
       return res.status(500).json({
         success: false,
-        message: 'Upload succeeded but no URL returned by upload middleware.'
+        message: 'Upload succeeded but no URL returned by storage provider.'
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'File uploaded successfully.',
       data: {
@@ -159,8 +187,12 @@ const uploadFile = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error uploading file:', error.message, error.stack);
-    res.status(500).json({
+    console.error('Error uploading file:', error);
+    // Handle common multer limit error
+    if (error && error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ success: false, message: 'File too large.' });
+    }
+    return res.status(500).json({
       success: false,
       message: 'Internal server error.',
       error: error.message
